@@ -71,3 +71,81 @@ impl NotificationService {
         Ok(())
     }
 }
+
+// Unit tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_notification_service_creation() {
+        let service = NotificationService::new();
+        assert!(service.rate_limits.is_empty());
+    }
+
+    #[test]
+    fn test_send_notification_within_rate_limit() {
+        let mut service = NotificationService::new();
+
+        // Send three notifications within the rate limit
+        for _ in 0..3 {
+            let result = service.send("test_type", "test_recipient", "Test message");
+            assert!(result.is_ok());
+        }
+    }
+
+    #[test]
+    fn test_send_notification_exceeds_rate_limit() {
+        let mut service = NotificationService::new();
+
+        // Set a rate limit of 2 per minute for "test_type"
+        service.rate_limits.insert(
+            "test_type".to_string(),
+            RateLimit {
+                max_requests: 2,
+                per_duration: Duration::from_secs(60),
+                recipient_counters: HashMap::new(),
+            },
+        );
+
+        // Send two notifications within the rate limit
+        for _ in 0..2 {
+            let success_result = service.send("test_type", "test_recipient", "Test message");
+            assert_eq!(success_result, Ok(()));
+        }
+
+        // Attempt to send a third notification, which should exceed the rate limit
+        let exceed_limit_result = service.send("test_type", "test_recipient", "Test message");
+        assert!(exceed_limit_result.is_err());
+    }
+
+    #[test]
+    fn test_send_notification_after_rate_limit_duration() {
+        let mut service = NotificationService::new();
+
+        // Set a rate limit of 1 per second for "test_type"
+        service.rate_limits.insert(
+            "test_type".to_string(),
+            RateLimit {
+                max_requests: 1,
+                per_duration: Duration::from_secs(1),
+                recipient_counters: HashMap::new(),
+            },
+        );
+
+        // Send a notification within the rate limit
+        let success_result = service.send("test_type", "test_recipient", "Test message");
+        assert_eq!(success_result, Ok(()));
+
+        // Attempt to send another notification, which should exceed the rate limit
+        let exceed_limit_result = service.send("test_type", "test_recipient", "Test message");
+        assert!(exceed_limit_result.is_err());
+
+        // Wait for 1 second (exceeding the rate limit duration)
+        std::thread::sleep(Duration::from_secs(1));
+
+        // Attempt to send another notification, which should be allowed as the elapsed time has exceeded the rate limit's duration
+        let result_after_elapsed_time = service.send("test_type", "test_recipient", "Test message");
+        assert_eq!(result_after_elapsed_time, Ok(()));
+    }
+}
