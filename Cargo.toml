@@ -1,5 +1,6 @@
 [package]
-name = "rate_limited_notification_service"
+name = "rate-limited-notification-service"
+authors = ["Juan Alegría"]
 version = "0.1.0"
 edition = "2021"
 

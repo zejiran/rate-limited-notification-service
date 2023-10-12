@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "rate_limited_notification_service"
+name = "rate-limited-notification-service"
 version = "0.1.0"

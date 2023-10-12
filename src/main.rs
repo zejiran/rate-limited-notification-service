@@ -94,7 +94,7 @@ fn main() {
     }
 
     // Example usage:
-    for _ in 0..5 {
+    for _ in 0..3 {
         match service.send("news", "user 1", "This is a news update") {
             Ok(()) => println!("Notification sent successfully."),
             Err(err) => println!("Failed to send notification: {}", err),
