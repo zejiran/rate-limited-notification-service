@@ -74,6 +74,20 @@ impl NotificationService {
 fn main() {
     let mut service = NotificationService::new();
 
+    // Define rate limits for different notification types
+    service.rate_limits.insert(
+        "status".to_string(),
+        NotificationService::create_rate_limit(2, Duration::from_secs(60)), // 2 per minute
+    );
+    service.rate_limits.insert(
+        "news".to_string(),
+        NotificationService::create_rate_limit(1, Duration::from_secs(24 * 60 * 60)), // 1 per day
+    );
+    service.rate_limits.insert(
+        "marketing".to_string(),
+        NotificationService::create_rate_limit(3, Duration::from_secs(60 * 60)), // 3 per hour
+    );
+
     // Example usage:
     for _ in 0..5 {
         match service.send("news", "user", "This is a news update") {
